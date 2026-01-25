@@ -1,0 +1,107 @@
+{
+	"name": "context-map",
+	"displayName": "Context Map",
+	"description": "Export workspace structure and code skeletons for LLM context.",
+	"version": "0.0.1",
+	"publisher": "anilkumarum",
+	"license": "GPL-3.0-only",
+	"icon": "media/logo.png",
+	"galleryBanner": {
+		"color": "#9904be",
+		"theme": "dark"
+	},
+	"preview": true,
+	"bugs": {
+		"url": "https://github.com/anilkumarum/context-map/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/anilkumarum/context-map"
+	},
+	"author": {
+		"name": "anilkumarum",
+		"url": "https://github.com/anilkumarum"
+	},
+	"engines": {
+		"vscode": "^1.100.0",
+		"node": ">=22.0.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [],
+	"main": "./out/extension.js",
+	"type": "module",
+	"contributes": {
+		"commands": [
+			{
+				"command": "contextMap.copyTreeSimple",
+				"title": "Copy Tree (Structure Only)"
+			},
+			{
+				"command": "contextMap.copyTreeSmart",
+				"title": "Copy Tree (With Exports)"
+			},
+			{
+				"command": "contextMap.copySkeleton",
+				"title": "Copy Code Skeletons"
+			},
+			{
+				"command": "contextMap.copyFull",
+				"title": "Copy Full Content"
+			}
+		],
+		"submenus": [
+			{
+				"id": "contextMap.menu",
+				"label": "Context Map"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"submenu": "contextMap.menu",
+					"group": "navigation"
+				}
+			],
+			"contextMap.menu": [
+				{
+					"command": "contextMap.copyTreeSimple",
+					"group": "1_structure"
+				},
+				{
+					"command": "contextMap.copyTreeSmart",
+					"group": "1_structure"
+				},
+				{
+					"command": "contextMap.copySkeleton",
+					"group": "2_content"
+				},
+				{
+					"command": "contextMap.copyFull",
+					"group": "2_content"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "contextMap.copySkeleton",
+				"key": "ctrl+alt+t",
+				"mac": "cmd+alt+t",
+				"when": "filesExplorerFocus && explorerResourceIsFolder"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run package",
+		"package": "esbuild ./src/vscode/extension.ts  --bundle --minify --outfile=./out/extension.js --external:vscode --format=cjs --platform=node --target=node22",
+		"test": "node --test test/**/*.test.ts"
+	},
+	"devDependencies": {
+		"@types/node": "^22.0.0",
+		"@types/vscode": "^1.100.0",
+		"ignore": "^7.0.5",
+		"typescript": "^5.9.3"
+	},
+	"dependencies": {}
+}

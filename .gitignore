@@ -1,0 +1,7 @@
+node_modules/
+out/
+*.js
+!src/hmr-client.js
+.vscode-test/
+*.vsix
+.DS_Store
