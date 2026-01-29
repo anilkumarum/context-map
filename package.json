@@ -67,11 +67,13 @@
 			"contextMap.menu": [
 				{
 					"command": "contextMap.copyTreeSimple",
-					"group": "1_structure"
+					"group": "1_structure",
+					"when": "explorerResourceIsFolder"
 				},
 				{
 					"command": "contextMap.copyTreeSmart",
-					"group": "1_structure"
+					"group": "1_structure",
+					"when": "explorerResourceIsFolder"
 				},
 				{
 					"command": "contextMap.copySkeleton",

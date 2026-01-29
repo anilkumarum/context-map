@@ -9,9 +9,6 @@ import { MESSAGES } from "../shared/constants.ts";
 const fs = new VSCodeFileSystem();
 const outputManager = new OutputManager();
 
-/**
- * Shared Handler Logic
- */
 async function runContextGeneration(
 	clickedUri: vscode.Uri,
 	selectedUris: vscode.Uri[] | undefined,
@@ -20,22 +17,27 @@ async function runContextGeneration(
 	try {
 		if (!clickedUri) return;
 
+		// 1. Resolve Paths
 		const inputPaths = getSelectedPaths(clickedUri, selectedUris);
 		const rootPath = getWorkspaceRoot(clickedUri.fsPath);
 
-		// Determine Target Folder for Tree Root (Parent of file, or the folder itself)
-		// We try to check if clicked item is a directory.
+		// 2. Determine Tree Root
+		// Check if the primary clicked item is a file or folder
 		let targetFolderPath = clickedUri.fsPath;
 		try {
 			const stat = await vscode.workspace.fs.stat(clickedUri);
-			if ((stat.type & vscode.FileType.Directory) === 0) {
+			if (stat.type === vscode.FileType.File) {
+				// If it's a file, set tree root to its parent directory
+				// This ensures the tree shows the file's location in context
 				targetFolderPath = vscode.Uri.joinPath(clickedUri, "..").fsPath;
 			}
 		} catch {
+			// Fallback if stat fails (unlikely)
 			targetFolderPath = vscode.Uri.joinPath(clickedUri, "..").fsPath;
 		}
 
-		// 1. Collect Files
+		// 3. Collect Files
+		// If inputPaths contains a single file, collectFiles will return just that file (correctly).
 		const targetFilePaths = await collectFiles({
 			fs,
 			rootPath,
@@ -43,20 +45,30 @@ async function runContextGeneration(
 		});
 
 		if (targetFilePaths.length === 0) {
-			vscode.window.showWarningMessage("No valid files found.");
+			vscode.window.showWarningMessage("No valid files found (checked .gitignore).");
 			return;
 		}
 
-		// 2. Assemble
+		// 4. Determine if Tree should be shown
+		// Logic:
+		// - If mode is TreeSimple or TreeSmart, ALWAYS show tree (that's the point).
+		// - If mode is Skeleton or Full:
+		//    - If 1 file -> HIDE Tree.
+		//    - If >1 files -> SHOW Tree (useful context).
+		const isTreeOnlyMode = mode === AssembleMode.TreeSimple || mode === AssembleMode.TreeSmart;
+		const suppressTree = !isTreeOnlyMode && targetFilePaths.length === 1;
+
+		// 5. Assemble
 		const result = await assembleContext({
 			fs,
 			rootPath,
 			targetFolderPath,
 			targetFilePaths,
 			mode,
+			suppressTree,
 		});
 
-		// 3. Output
+		// 5. Output
 		const msg =
 			mode === AssembleMode.TreeSimple || mode === AssembleMode.TreeSmart
 				? MESSAGES.SUCCESS.TREE_COPIED
@@ -64,13 +76,12 @@ async function runContextGeneration(
 
 		await outputManager.handleOutput(result, msg);
 	} catch (error) {
-		console.error(error);
+		console.error("Context Generation Failed:", error);
 		vscode.window.showErrorMessage(MESSAGES.ERRORS.GENERIC);
 	}
 }
 
 // --- Exposed Command Handlers ---
-
 // SubMenu 1
 export async function copyTreeSimple(uri: vscode.Uri, uris: vscode.Uri[]) {
 	await runContextGeneration(uri, uris, AssembleMode.TreeSimple);

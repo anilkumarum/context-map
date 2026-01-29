@@ -88,7 +88,8 @@ export async function collectFiles(options: CollectionOptions): Promise<string[]
 				await fs.readDirectory(path);
 				// It's a directory, walk it
 				await walk(path);
-			} catch {
+			} catch (error) {
+				console.log({ error });
 				// It's likely a file (or invalid).
 				// If it exists (we can read it), add it.
 				// For performance, we assume if it was selected in VS Code, it exists.
