@@ -30,7 +30,7 @@
 		"Other"
 	],
 	"activationEvents": [],
-	"main": "./out/extension.js",
+	"main": "./src/vscode/extension.ts",
 	"type": "module",
 	"contributes": {
 		"commands": [

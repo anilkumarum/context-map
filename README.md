@@ -29,6 +29,3 @@ This extension follows a **Functional Core, Imperative Shell** architecture.
 ## Requirements
 
 - VS Code 1.100.0+
-
-<!-- Generate README for publish vscode extension marketplace,
-Explain its core features, how to use this extension -->
