@@ -1,0 +1,47 @@
+import * as vscode from "vscode";
+import * as path from "node:path";
+import { FileType, type IFileSystem } from "../core/fs-interface.ts";
+import { EntryKind, type EntryKind as EntryKindType } from "../core/fs-interface.ts";
+
+export class VSCodeFileSystem implements IFileSystem {
+	async readDirectory(dirPath: string): Promise<[string, FileType][]> {
+		const uri = vscode.Uri.file(dirPath);
+
+		// FIX: Do NOT try/catch here.
+		// Let the error bubble up so collectFiles knows it's a file (or invalid).
+		const results = await vscode.workspace.fs.readDirectory(uri);
+
+		return results.map(([name, type]) => {
+			let coreType = FileType.Unknown;
+			if (type & vscode.FileType.File) coreType = FileType.File;
+			if (type & vscode.FileType.Directory) coreType = FileType.Directory;
+			if (type & vscode.FileType.SymbolicLink) coreType = FileType.SymbolicLink;
+			return [name, coreType];
+		});
+	}
+
+	async readFile(filePath: string): Promise<string | null> {
+		const uri = vscode.Uri.file(filePath);
+		try {
+			const uint8Array = await vscode.workspace.fs.readFile(uri);
+			return new TextDecoder().decode(uint8Array);
+		} catch {
+			return null;
+		}
+	}
+
+	async statEntry(filePath: string): Promise<EntryKindType> {
+		try {
+			const stat = await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
+			if (stat.type & vscode.FileType.Directory) return EntryKind.Directory;
+			if (stat.type & vscode.FileType.File) return EntryKind.File;
+			return EntryKind.NotFoundOrUnreadable;
+		} catch {
+			return EntryKind.NotFoundOrUnreadable;
+		}
+	}
+
+	join(...paths: string[]): string {
+		return path.join(...paths);
+	}
+}
